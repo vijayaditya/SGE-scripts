@@ -3,6 +3,9 @@
 
 # written by Vijayaditya Peddinti
 
+# requires installation of nvidia-ml-py
+# e.g. install using pip:
+#           pip install nvidia-ml-py
 
 from pynvml import *
 import datetime
