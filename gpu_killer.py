@@ -135,6 +135,8 @@ def killProcess(pid, notify_email):
     os.kill(pid, signal.SIGTERM)
 
     # send an email to user whose process was killed and an additional email_id (e.g. admin)
+    print message
+    print "Notifications sent to {0}, {1}".format(email, notify_email)
     subprocess.Popen('echo "{0}" | mail -s "gpu_killer.py triggered on {1} " {2} {3}'.format(message, socket.gethostname(), email, notify_email), shell=True)
 
 def verifyUsage(process_ids, notify_email):
