@@ -20,9 +20,14 @@ import signal
 import logging
 
 from logging.config import fileConfig
-script_dir = os.path.dirname(os.path.realpath(__file__))
-fileConfig('{0}/logging_config.ini'.format(script_dir))
-logger = logging.getLogger()
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 logger.info('Starting gpu_killer.py')
 
 def getUserName(pid):
@@ -211,7 +216,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Monitors GPU usage and kills jobs which use GPUs without reserving one with the SGE master.")
     parser.add_argument("--query-interval", type=int, default=2,
                          help="The time between two queries of GPU state (in seconds)")
-    parser.add_argument("notify_email", type=str, help = "Email which will be notified when a process is killed. This is typically the cluster admin email-id")
+    parser.add_argument("--notify-email", type=str, help = "Email which will be notified when a process is killed. This is typically the cluster admin email-id", required=True)
     
     args = parser.parse_args()
     

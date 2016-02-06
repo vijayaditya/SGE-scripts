@@ -1,12 +1,9 @@
 #!/bin/bash -u
 
-
-notification_email="clsphelp@clsp.jhu.edu" # email id which will receive the email when a process is killed, along the user whose process is killed
+notification_email=$1 # email id which will receive the email when a process is killed, along the user whose process is killed
 # in case there is no email specified in the users gecos field only this email-id will receive the email
 
-query_interval=2 # interval for checking the GPU status using nvidia-smi, in seconds
-
-
+query_interval=$2 # interval for checking the GPU status using nvidia-smi, in seconds
 # check if the required libraries are present
 python -c "from pynvml import *"
 
