@@ -20,10 +20,11 @@ fi
 # run the script
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-sudo $DIR/gpu_killer.py --query-interval $query_interval $notification_email
+#sudo $DIR/gpu_killer.py --query-interval $query_interval $notification_email
+$DIR/gpu_killer.py --query-interval $query_interval $notification_email
 
 if [ $? -ne 0 ]; then
-  echo "gpu_killer.py died due to an error on $HOSTNAME. Please restart it." | \
+  echo "gpu_killer.py died due to an error on $HOSTNAME. If this is a non-GPU message ignore this mail. If not please restart the process." | \
     mail -s "gpu_killer.py died on $HOSTNAME" $notification_email
   exit 1
 fi

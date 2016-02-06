@@ -17,6 +17,13 @@ import argparse
 import re
 import socket 
 import signal
+import logging
+
+from logging.config import fileConfig
+script_dir = os.path.dirname(os.path.realpath(__file__))
+fileConfig('{0}/logging_config.ini'.format(script_dir))
+logger = logging.getLogger()
+logger.info('Starting gpu_killer.py')
 
 def getUserName(pid):
     proc_stat_file = os.stat("/proc/%d" % pid)
@@ -34,8 +41,16 @@ def handleError(err):
         return err.__str__()
 
 def getGpuReservationFromQueue():
-    proc = subprocess.Popen("qstat -r -q *.q@$HOSTNAME.clsp.jhu.edu|egrep '(^[0-9]|gpu=)'|grep gpu= -B1|grep '^[0-9]'|awk '{print $4}'", shell=True, stdout=subprocess.PIPE)
-    stdout_value = proc.communicate()[0]
+    proc = subprocess.Popen("qstat -r -q *.q@$HOSTNAME.clsp.jhu.edu|egrep '(^[0-9]|gpu=)'|grep gpu= -B1|grep '^[0-9]'|awk '{print $4}'",
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+    [stdout_value, stderr_value] = proc.communicate()
+    if len(stderr_value.strip()) != 0:
+        logger.warning("qstat returned an error \n{0}".format(stderr_value))
+        return
+        # we could have checked proc.returncode, but the return code is reset 
+        # by the last command in the pipe so the errorcode of qstat will be reset
     usernames = stdout_value.split()
     usage_per_user = {}
     for username in usernames:
@@ -141,6 +156,9 @@ def killProcess(pid, notify_email):
 
 def verifyUsage(process_ids, notify_email):
     usage_per_user = getGpuReservationFromQueue()
+    if usage_per_user is None:
+        # there was an error while querying SGE using qstat
+        return False
 
     for pid in process_ids:
         user_name = getUserName(pid)
@@ -152,6 +170,7 @@ def verifyUsage(process_ids, notify_email):
         except KeyError:
             # Qstat command returns no GPU reservations for this user
             killProcess(pid, notify_email)
+    return True
 
 def DeviceQuery(notify_email, query_interval = 2):
     try:
@@ -173,7 +192,13 @@ def DeviceQuery(notify_email, query_interval = 2):
                     raise Exception(handleError(err))
 
             if current_pids != previous_pids:
-                verifyUsage(current_pids, notify_email)
+                is_success = verifyUsage(current_pids, notify_email)
+                if not is_success:
+                    # there was an error while verifying usage
+                    # so sleep and rerun the loop
+                    logger.warning("verifyUsage() did not succeed, probably due to qstat failure. So sleeping for 10 seconds before querying again")
+                    time.sleep(10)
+
             previous_pids = current_pids
             time.sleep(query_interval)
 
