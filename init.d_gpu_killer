@@ -8,25 +8,31 @@
 # Should-Stop:
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Short Description: Kill high-memory processes and email user
-# Description: mem_killer
+# Short Description: Kill processes which access GPU without reservation on SGE
+# Description: gpu_killer
 ### END INIT INFO
 
 # Script written by Vijayaditya Peddinti, adapted from a similar script written
-# by Dan PoveyJongsoo Kim called "mem_killer"
+# by Dan Povey called "mem_killer"
 # /etc/init.d/gpu_killer
-
 OPTS="--query-interval 2 --notify-email clsphelp@clsp.jhu.edu" 
 
 . /lib/lsb/init-functions
 
-DAEMON=/sbin/gpu_killer
+# it is important to name the exe gpu_killer.py and not gpu_killer
+# as doing `basename $DAEMON` would give us gpu_killer which 
+# when used with killall could kill the init.d script before
+# the $DAEMON process. Using $DAEMON in place of `basename $DAEMON`
+# is not an option as the process gets the name gpu_killer and 
+# not /sbin/gpu_killer
+ 
+DAEMON=/sbin/gpu_killer.py
 
 case "$1" in
   start)
     echo "Starting $DAEMON"
     # Silently kill any old process.
-    killall -u root `basename $DAEMON` >& /dev/null
+    killall -u root `basename $DAEMON` >&/dev/null
     nohup $DAEMON $OPTS </dev/null >&/dev/null &
     ;;
   stop)
