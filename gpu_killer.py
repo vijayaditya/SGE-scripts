@@ -41,13 +41,16 @@ logger.addHandler(file_handler)
 logger.info('Starting gpu_killer.py')
 
 def getUserName(pid):
-    proc_stat_file = os.stat("/proc/%d" % pid)
-    # get UID via stat call
-    uid = proc_stat_file.st_uid
-    # look up the username from uid
-    username = pwd.getpwuid(uid)[0]
+    try:
+        proc_stat_file = os.stat("/proc/%d" % pid)
+        # get UID via stat call
+        uid = proc_stat_file.st_uid
+        # look up the username from uid
+        username = pwd.getpwuid(uid)[0]
 
-    return username
+        return username
+    except OSError:
+        return
 
 def handleError(err):
     if (err.value == NVML_ERROR_NOT_SUPPORTED):
@@ -133,7 +136,7 @@ def getProcessInfo(pid):
                 #pwd.struct_passwd(pw_name='vpeddinti', pw_passwd='Fc4Ks3watLhcw', pw_uid=60575, pw_gid=21, pw_gecos='Vijayaditya Peddinti,323, Hackerman,p.vijayaditya@gmail.com', pw_dir='/home/vpeddinti', pw_shell='/bin/bash')
                 info['user_name'] = uinfo.pw_name
                 info['email'] = parseGecosForEmail(uinfo.pw_gecos)
-    except IOError:
+    except (IOError, OSError):
         # the process file is missing, probably it died before we got to i so lets just return None
         return
         
@@ -191,6 +194,10 @@ def verifyUsage(process_ids, notify_email):
 
     for pid in process_ids:
         user_name = getUserName(pid)
+        if user_name is None:
+            # the process was done before we looked up the getUserName
+            continue
+
         try:
             usage_per_user[user_name] += -1
             if usage_per_user[user_name] < 0:
@@ -261,6 +268,7 @@ if __name__ == "__main__":
         if notify_email is not None:
             # this check is necessary as there can be cases where even args might not have been defined before raising the error
     	    sendDeathMail(notify_email)	
+	traceback.print_exc()
         raise e
     except BaseException as e :
         # this is the parent class of exception and includes SIG* signals
@@ -268,5 +276,6 @@ if __name__ == "__main__":
 	logger.info(str(e))
         if notify_email is not None:
             # this check is necessary as there can be cases where even args might not have been defined before raising the error
-        	sendDeathMail(notify_email)	
+        	sendDeathMail(notify_email)
+	traceback.print_exc()
         raise e
