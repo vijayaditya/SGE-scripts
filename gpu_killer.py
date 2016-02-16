@@ -244,7 +244,7 @@ def DeviceQuery(notify_email, query_interval = 2):
     nvmlShutdown()
 
 def sendDeathMail(notify_email):
-	sendMail(' gpu_killer died on {hostname}. Please check /var/log/messages and /var/log/gpu_killer.log for details.'.format(hostname = socket.gethostname()), notify_email)
+	sendMail(' gpu_killer died on {hostname}. Please check /var/log/messages for details.'.format(hostname = socket.gethostname()), notify_email)
 
 if __name__ == "__main__":
     notify_email = None
