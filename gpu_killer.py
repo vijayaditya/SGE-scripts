@@ -33,10 +33,10 @@ handler.setLevel(logging.INFO)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-file_handler = logging.FileHandler("/var/log/gpu_killer.log")
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+#file_handler = logging.FileHandler("/var/log/gpu_killer.log")
+#file_handler.setLevel(logging.INFO)
+#file_handler.setFormatter(formatter)
+#logger.addHandler(file_handler)
 
 logger.info('Starting gpu_killer.py')
 
