@@ -184,7 +184,7 @@ def killProcess(pid, notify_email):
 
     # send an email to user whose process was killed and an additional email_id (e.g. admin)
     logger.info("Notifications sent to {0}, {1}".format(email, notify_email))
-    sendMail(message, notify_email, user_email)
+    sendMail(message, notify_email, email)
 
 def verifyUsage(process_ids, notify_email):
     usage_per_user = getGpuReservationFromQueue()
